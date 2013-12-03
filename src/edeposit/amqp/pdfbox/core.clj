@@ -15,6 +15,16 @@
   (:gen-class :main true)
   )
 
+;; (def test-file (io/file "resources/1002186430_000015 Born digital - OCR z TIFFu.pdf"))
+;; (def pddocument (PDDocument/load test-file))
+;; (def info (.getDocumentInformation pddocument))
+;; (def dict (.getDictionary info))
+;; (.keyList dict)
+;; (.getValues dict)
+;; (.entrySet dict)
+;; (def cat (.getDocumentCatalog pddocument))
+;; (def meta (.getMetadata cat))
+
 (defn xmlValidationOutput [test-file]
   (let [pddocument (PDDocument/load test-file)
         parser (new PreflightParser test-file)
@@ -38,7 +48,7 @@
                                 )
                    
                    (xml/element :validation {}
-                                (xml/element :isValidPDFA1 {} (format "%s" (.isValid result)))
+                                (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
                                 (xml/element :validationErrors {}
                                              (map #(xml/element :error { :errorCode (format "%s" (.getErrorCode %))}
                                                                 (format "%s" (.getDetails %)))

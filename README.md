@@ -1,13 +1,13 @@
 # edeposit.amqp.pdfbox
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library designed to validate PDF/A and extract informations from PDF
 
 ## Usage
 
-FIXME
+lein run -- FILE_NAME
 
 ## License
 
-Copyright © 2013 FIXME
+Copyright © 2013 Jan Stavel stavel.jan at gmail.com
 
 Distributed under the Eclipse Public License, the same as Clojure.
