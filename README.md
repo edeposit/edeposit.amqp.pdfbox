@@ -1,8 +1,7 @@
 # edeposit.amqp.pdfbox
+![travis status](https://travis-ci.org/jstavel/edeposit.amqp.pdfbox.png)
 
 A Clojure library designed to validate PDF/A and extract informations from PDF
-
-https://travis-ci.org/jstavel/edeposit.amqp.pdfbox.png
 
 ## Usage
 
