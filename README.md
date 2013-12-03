@@ -2,6 +2,8 @@
 
 A Clojure library designed to validate PDF/A and extract informations from PDF
 
+https://travis-ci.org/jstavel/edeposit.amqp.pdfbox.png
+
 ## Usage
 
 lein run -- FILE_NAME
