@@ -18,12 +18,9 @@
   (:gen-class :main true)
   )
 
-(def test-file (io/file "resources/test-pdf.pdf"))
-(def pddocument (PDDocument/load test-file))
-(def info (.getDocumentInformation pddocument))
-(def formatter (format/formatters :date-time :basic-time))
-(format/show-formatters)
-(def created (.getCreationDate info))
+;; (def formatter (format/formatters :date-time :basic-time))
+;; (format/show-formatters)
+;; (def created (.getCreationDate info))
 
 ;; (format/parse formatter created)
 ;; (format/show-formatters)
@@ -49,6 +46,12 @@
     )
   )
 
+(def test-file (io/file "resources/test-pdf.pdf"))
+(def pddocument (PDDocument/load test-file))
+(def info (.getDocumentInformation pddocument))
+(def catalog (.getDocumentCatalog pddocument))
+(def metadata (.getMetadata catalog))
+
 ;(format-date (.lastModified test-file))
 
 (defn xmlValidationOutput [test-file]
@@ -62,7 +65,9 @@
       (def result (.getResult preflightDocument))
       (.close preflightDocument)
       (def info (.getDocumentInformation pddocument))
-      (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"))
+      (def catalog (.getDocumentCatalog pddocument))
+      (def metadata (.getMetadata catalog))
+      (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
 
       (xml/element :result {}
                    (xml/element :extractor {}
