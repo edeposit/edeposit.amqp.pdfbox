@@ -130,5 +130,28 @@
     )
   )
 
+(deftest xml-test-05
+  (let [fname "resources/xmp_metadata_added.pdf"
+        file (io/file fname)
+        data (core/xmlValidationOutput file)
+        xmldata (zip/xml-zip data)
+        ]
+    (xml-test fname file xmldata :num-of-pages "1")
+    (xml-test-is-not-valid fname file xmldata)
+    (testing (format "testing xml, section characterization %s" fname)
+      (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) "Bruno Lowagie"))
+      (is (= (first (xml/xml-> xmldata :characterization :title  xml/text)) "Hello World example"))
+      (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) "This example shows how to add metadata"))
+      (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) "Metadata, iText, PDF"))
+      (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) "My program using iText"))
+      (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) "iText® 5.4.5 ©2000-2013 1T3XT BVBA (AGPL-version)"))
+      )
+    (testing (format "testing xml, section identification %s" fname)
+      ;(is (= (first (xml/xml-> xmldata :identification :created xml/text)) "2013-10-23T11:28:08.000+02:00"))
+      (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
+      )
+    )
+  )
+
 
 

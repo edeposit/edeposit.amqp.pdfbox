@@ -46,17 +46,20 @@
     )
   )
 
-(def test-file (io/file "resources/test-pdf.pdf"))
+(def test-file (io/file "resources/xmpspecification.pdf"))
 (def pddocument (PDDocument/load test-file))
 (def info (.getDocumentInformation pddocument))
 (def catalog (.getDocumentCatalog pddocument))
 (def metadata (.getMetadata catalog))
 
-(when-not (nil? metadata)
-  (.exportXMPMetadata metadata)  
-  )
+(def xmp (or (nil? metadata) (.exportXMPMetadata metadata)))
+(utils/list-methods xmp)
+(.getEncoding xmp)
+(print  (.asByteArray xmp))
 
-;(format-date (.lastModified test-file))
+(with-open [o (io/output-stream "test.txt")]
+  (.save xmp o))
+
 
 (defn xmlValidationOutput [test-file]
   (let [pddocument (PDDocument/load test-file)
