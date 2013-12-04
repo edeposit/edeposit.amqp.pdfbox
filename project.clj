@@ -10,6 +10,7 @@
                  [org.clojure/tools.cli "0.2.4"]
                  [org.clojure/data.zip "0.1.1"]
                  [com.novemberain/langohr "1.4.1"]
+                 [clj-time "0.6.0"]
                  ]
   :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.1.2"]]}}
   )

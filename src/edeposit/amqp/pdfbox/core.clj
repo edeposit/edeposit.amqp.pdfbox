@@ -11,19 +11,37 @@
            [org.apache.pdfbox.preflight.parser PreflightParser]
            [org.apache.pdfbox.preflight PreflightDocument]
            [java.util Date]
+           [org.apache.pdfbox Version]
            )
   (:gen-class :main true)
   )
 
-;; (def test-file (io/file "resources/1002186430_000015 Born digital - OCR z TIFFu.pdf"))
-;; (def pddocument (PDDocument/load test-file))
-;; (def info (.getDocumentInformation pddocument))
+(def test-file (io/file "resources/test-pdf.pdf"))
+(def pddocument (PDDocument/load test-file))
+(def info (.getDocumentInformation pddocument))
+
 ;; (def dict (.getDictionary info))
 ;; (.keyList dict)
 ;; (.getValues dict)
 ;; (.entrySet dict)
 ;; (def cat (.getDocumentCatalog pddocument))
 ;; (def meta (.getMetadata cat))
+
+(defn format-date [value]
+  (if (or (nil? value) (empty value))
+    ""
+    (if (integer? value)
+      (format "%s" (new Date value))
+      (if (string? value)
+        value
+        (format "%s" value)
+        )
+      )
+    )
+  )
+
+(format-date (.lastModified test-file))
+(format-date (.getCreationDate info))
 
 (defn xmlValidationOutput [test-file]
   (let [pddocument (PDDocument/load test-file)
@@ -35,16 +53,27 @@
       (.validate preflightDocument)
       (def result (.getResult preflightDocument))
       (.close preflightDocument)
+      (def info (.getDocumentInformation pddocument))
 
       (xml/element :result {}
+                   (xml/element :extractor {}
+                                (xml/element :version {} (Version/getVersion))
+                                )
                    (xml/element :identification {}
                                 (xml/element :fileSize {} (format "%s" (.length test-file)))
                                 (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
-                                (xml/element :lastModified {} (format "%s" (new Date (.lastModified test-file))))
+                                (xml/element :lastModified {} (format-date (.lastModified test-file)))
+                                (xml/element :created {} (format-date (.getCreationDate info)))
                                 )
                    (xml/element :characterization {}
                                 (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
-                                (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))     
+                                (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
+                                (xml/element :author {} (.getAuthor info))
+                                (xml/element :title {} (.getTitle info))
+                                (xml/element :subject {} (.getSubject info))
+                                (xml/element :keywords {} (.getKeywords info))
+                                (xml/element :creator {} (.getCreator info))
+                                (xml/element :producer {} (.getProducer info))
                                 )
                    
                    (xml/element :validation {}
