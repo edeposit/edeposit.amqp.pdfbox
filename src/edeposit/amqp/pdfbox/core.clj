@@ -52,6 +52,10 @@
 (def catalog (.getDocumentCatalog pddocument))
 (def metadata (.getMetadata catalog))
 
+(when-not (nil? metadata)
+  (.exportXMPMetadata metadata)  
+  )
+
 ;(format-date (.lastModified test-file))
 
 (defn xmlValidationOutput [test-file]
@@ -90,7 +94,6 @@
                                 (xml/element :creator {} (.getCreator info))
                                 (xml/element :producer {} (.getProducer info))
                                 )
-                   
                    (xml/element :validation {}
                                 (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
                                 (xml/element :validationErrors {}

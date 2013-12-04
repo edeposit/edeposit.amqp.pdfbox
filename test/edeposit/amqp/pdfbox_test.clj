@@ -23,7 +23,9 @@
     )
   )
 
-(defn xml-test [fname file xmldata]
+(defn xml-test [fname file xmldata & {:keys [num-of-pages]
+                                      :or [:num-of-pages "1"]
+                                      }]
   (testing (format "xml tags tests for: %s" fname)
     (is (= (first (xml/xml-> xmldata :extractor :version xml/text)) (Version/getVersion)))
     (is (= (first (xml/xml-> xmldata :identification :fileSize xml/text)) (-> file .length .toString)))
@@ -31,7 +33,7 @@
     (is (= (first (xml/xml-> xmldata :identification :lastModified xml/text))
            (format "%s" (new Date (.lastModified file)))))
     (is (= (first (xml/xml-> xmldata :characterization :isEncrypted xml/text)) "false"))
-    (is (= (first (xml/xml-> xmldata :characterization :numOfPages xml/text)) "1"))
+    (is (= (first (xml/xml-> xmldata :characterization :numOfPages xml/text)) num-of-pages))
     )
 
   )
@@ -42,7 +44,7 @@
         data (core/xmlValidationOutput file)
         xmldata (zip/xml-zip data)
         ]
-    (xml-test fname file xmldata)
+    (xml-test fname file xmldata :num-of-pages "1")
     (xml-test-is-valid fname file xmldata)
     (testing (format "testing xml, section characterization %s" fname)
       (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) "Vychodil Bedřich"))
@@ -65,7 +67,7 @@
         data (core/xmlValidationOutput file)
         xmldata (zip/xml-zip data)
         ]
-    (xml-test fname file xmldata)
+    (xml-test fname file xmldata :num-of-pages "1")
     (xml-test-is-not-valid fname file xmldata)
     (testing (format "testing xml, section characterization %s" fname)
       (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) "Vychodil Bedřich"))
@@ -88,7 +90,7 @@
         data (core/xmlValidationOutput file)
         xmldata (zip/xml-zip data)
         ]
-    (xml-test fname file xmldata)
+    (xml-test fname file xmldata :num-of-pages "1")
     (xml-test-is-not-valid fname file xmldata)
     (testing (format "testing xml, section characterization %s" fname)
       (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) ""))
@@ -104,5 +106,29 @@
       )
     )
   )
+
+(deftest xml-test-04
+  (let [fname "resources/xmpspecification.pdf"
+        file (io/file fname)
+        data (core/xmlValidationOutput file)
+        xmldata (zip/xml-zip data)
+        ]
+    (xml-test fname file xmldata :num-of-pages "94")
+    (xml-test-is-not-valid fname file xmldata)
+    (testing (format "testing xml, section characterization %s" fname)
+      (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) "Adobe Developer Technologies"))
+      (is (= (first (xml/xml-> xmldata :characterization :title  xml/text)) "XMP - Extensible Metadata Platform"))
+      (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) "XMP Metadata"))
+      (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) "XMP metadata schema XML RDF"))
+      (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) "FrameMaker 7.0"))
+      (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) "Acrobat Distiller 5.0.5 for Macintosh"))
+      )
+    (testing (format "testing xml, section identification %s" fname)
+      ;(is (= (first (xml/xml-> xmldata :identification :created xml/text)) "2013-10-23T11:28:08.000+02:00"))
+      (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
+      )
+    )
+  )
+
 
 
