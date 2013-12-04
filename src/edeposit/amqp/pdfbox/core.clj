@@ -4,6 +4,7 @@
             [clojure.data.xml :as xml]
             [edeposit.amqp.pdfbox.utils :as utils]
             [clojure.tools.cli :as cli]
+            [clj-time.format :as format]
             )
   (:import [org.apache.pdfbox.pdmodel PDDocument PDPage]
            [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
@@ -12,6 +13,7 @@
            [org.apache.pdfbox.preflight PreflightDocument]
            [java.util Date]
            [org.apache.pdfbox Version]
+           [java.text SimpleDateFormat]
            )
   (:gen-class :main true)
   )
@@ -19,6 +21,12 @@
 (def test-file (io/file "resources/test-pdf.pdf"))
 (def pddocument (PDDocument/load test-file))
 (def info (.getDocumentInformation pddocument))
+(def formatter (format/formatters :date-time :basic-time))
+(format/show-formatters)
+(def created (.getCreationDate info))
+
+;; (format/parse formatter created)
+;; (format/show-formatters)
 
 ;; (def dict (.getDictionary info))
 ;; (.keyList dict)
@@ -28,6 +36,7 @@
 ;; (def meta (.getMetadata cat))
 
 (defn format-date [value]
+  (def formatter (format/formatters :basic-date-time))
   (if (or (nil? value) (empty value))
     ""
     (if (integer? value)
@@ -40,8 +49,7 @@
     )
   )
 
-(format-date (.lastModified test-file))
-(format-date (.getCreationDate info))
+;(format-date (.lastModified test-file))
 
 (defn xmlValidationOutput [test-file]
   (let [pddocument (PDDocument/load test-file)
@@ -54,6 +62,7 @@
       (def result (.getResult preflightDocument))
       (.close preflightDocument)
       (def info (.getDocumentInformation pddocument))
+      (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"))
 
       (xml/element :result {}
                    (xml/element :extractor {}
@@ -63,7 +72,8 @@
                                 (xml/element :fileSize {} (format "%s" (.length test-file)))
                                 (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
                                 (xml/element :lastModified {} (format-date (.lastModified test-file)))
-                                (xml/element :created {} (format-date (.getCreationDate info)))
+                                (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))))
+                                (xml/element :trapped {} (.getTrapped info))
                                 )
                    (xml/element :characterization {}
                                 (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
