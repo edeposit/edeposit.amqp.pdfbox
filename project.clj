@@ -11,6 +11,11 @@
                  [org.clojure/data.zip "0.1.1"]
                  [com.novemberain/langohr "1.4.1"]
                  [clj-time "0.6.0"]
+                 [org.clojure/data.json "0.2.3"]
+                 [org.flatland/protobuf "0.7.1"]
+                 [org.clojure/data.codec "0.1.0"]
                  ]
-  :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.1.2"]]}}
+  :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.1.2"]
+                             [lein-protobuf "0.1.1"]
+                             ]}}
   )

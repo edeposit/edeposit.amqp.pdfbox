@@ -46,67 +46,85 @@
     )
   )
 
-(def test-file (io/file "resources/xmpspecification.pdf"))
-(def pddocument (PDDocument/load test-file))
-(def info (.getDocumentInformation pddocument))
-(def catalog (.getDocumentCatalog pddocument))
-(def metadata (.getMetadata catalog))
 
-(def xmp (or (nil? metadata) (.exportXMPMetadata metadata)))
-(utils/list-methods xmp)
-(.getEncoding xmp)
-(print  (.asByteArray xmp))
 
-(with-open [o (io/output-stream "test.txt")]
-  (.save xmp o))
+;; (def test-file (io/file "resources/xmpspecification.pdf"))
+;; (def pddocument (PDDocument/load test-file))
+;; (def info (.getDocumentInformation pddocument))
+;; (def catalog (.getDocumentCatalog pddocument))
+;; (def metadata (.getMetadata catalog))
 
+;; (def xmp (or (nil? metadata) (.exportXMPMetadata metadata)))
+;; (utils/list-methods xmp)
+;; (.getEncoding xmp)
+;; (print  (.asByteArray xmp))
+
+;; (with-open [o (io/output-stream "test.txt")]
+;;   (.save xmp o))
 
 (defn xmlValidationOutput [test-file]
-  (let [pddocument (PDDocument/load test-file)
-        parser (new PreflightParser test-file)
-        ]
-    (do
-      (.parse parser)
-      (def preflightDocument (.getPreflightDocument parser))
-      (.validate preflightDocument)
-      (def result (.getResult preflightDocument))
-      (.close preflightDocument)
-      (def info (.getDocumentInformation pddocument))
-      (def catalog (.getDocumentCatalog pddocument))
-      (def metadata (.getMetadata catalog))
-      (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
+  (let* [pddocument (PDDocument/load test-file)
+         parser (new PreflightParser test-file) ]
+        (do
+          (.parse parser)
+          (def preflightDocument (.getPreflightDocument parser))
+          (.validate preflightDocument)
+          (def result (.getResult preflightDocument))
+          (.close preflightDocument)
+          (def info (.getDocumentInformation pddocument))
+          (def catalog (.getDocumentCatalog pddocument))
+          (def metadata (.getMetadata catalog))
+          (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
 
-      (xml/element :result {}
-                   (xml/element :extractor {}
-                                (xml/element :version {} (Version/getVersion))
-                                )
-                   (xml/element :identification {}
-                                (xml/element :fileSize {} (format "%s" (.length test-file)))
-                                (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
-                                (xml/element :lastModified {} (format-date (.lastModified test-file)))
-                                (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))))
-                                (xml/element :trapped {} (.getTrapped info))
-                                )
-                   (xml/element :characterization {}
-                                (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
-                                (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
-                                (xml/element :author {} (.getAuthor info))
-                                (xml/element :title {} (.getTitle info))
-                                (xml/element :subject {} (.getSubject info))
-                                (xml/element :keywords {} (.getKeywords info))
-                                (xml/element :creator {} (.getCreator info))
-                                (xml/element :producer {} (.getProducer info))
-                                )
-                   (xml/element :validation {}
-                                (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
-                                (xml/element :validationErrors {}
-                                             (map #(xml/element :error { :errorCode (format "%s" (.getErrorCode %))}
-                                                                (format "%s" (.getDetails %)))
-                                                  (.getErrorsList result)))
-                                )
-                   )
-      )
-    )
+          (def xmp-file (doto (java.io.File/createTempFile "pre" ".suff") .deleteOnExit))
+          ;; (if-not (nil? metadata)
+          ;;   (.save (.exportXMPMetadata metadata) xmp-file)            
+          ;;   )
+
+          (xml/element :result {}
+                       (xml/element :extractor {}
+                                    (xml/element :name {} "PDFBox Apache.org")
+                                    (xml/element :version {} (Version/getVersion))
+                                    )
+                       (xml/element :identification {}
+                                    (xml/element :fileSize {} (format "%s" (.length test-file)))
+                                    (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
+                                    (xml/element :lastModified {} (format-date (.lastModified test-file)))
+                                    (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))))
+                                    (xml/element :trapped {} (.getTrapped info))
+                                    )
+                       (xml/element :characterization {}
+                                    (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
+                                    (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
+                                    (xml/element :author {} (.getAuthor info))
+                                    (xml/element :title {} (.getTitle info))
+                                    (xml/element :subject {} (.getSubject info))
+                                    (xml/element :keywords {} (.getKeywords info))
+                                    (xml/element :creator {} (.getCreator info))
+                                    (xml/element :producer {} (.getProducer info))
+                                    )
+                       (xml/element :validation {}
+                                    (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
+                                    (xml/element :validationErrors {}
+                                                 (map #(xml/element :error { :errorCode (format "%s" (.getErrorCode %))}
+                                                                    (format "%s" (.getDetails %)))
+                                                      (.getErrorsList result)))
+                                    )
+                       (xml/element :xmp {} "ahoj"
+                                    ;(clojure.xml/parse (io/file "/tmp/xmp.xml"))
+                                    )
+                       )
+          )
+        )
+  )
+
+(defn xml-with-elapsed-time [test-file]
+  (let* [ start (. java.lang.System (nanoTime))
+         xmldata (xmlValidationOutput test-file)
+         stop (. java.lang.System (nanoTime))
+         ]
+        xmldata
+        )
   )
 
 (defn -main [& args]
