@@ -80,7 +80,7 @@
       (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) ""))
       (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) ""))
       (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) "Microsoft® Word 2010"))
-      (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) "Microsoft® Word 201"))
+      (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) "Microsoft® Word 2010"))
       )
     (testing (format "testing xml, section identification %s" fname)
       ;(is (= (first (xml/xml-> xmldata :identification :created xml/text)) "2013-10-23T11:48:37.000+02:00"))
