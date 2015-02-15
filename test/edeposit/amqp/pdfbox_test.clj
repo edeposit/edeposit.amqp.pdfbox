@@ -11,14 +11,17 @@
            )
   )
 
+
 (defn xml-test-is-valid [fname file xmldata]
   (testing (format "test of validation section pdfa: %s" fname)
+    (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "true"))
     (is (= (first (xml/xml-> xmldata :validation :isValidPDFA xml/text)) "true"))
     )
   )
 
 (defn xml-test-is-not-valid [fname file xmldata]
   (testing (format "test of validation section pdfa: %s" fname)
+    (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "true"))
     (is (= (first (xml/xml-> xmldata :validation :isValidPDFA xml/text)) "false"))
     )
   )
@@ -42,7 +45,7 @@
 (deftest xml-test-01
   (let [fname "resources/test-pdfa-1a.pdf"
         file (io/file fname)
-        data (core/xmlValidationOutput file)
+        data (core/validate file)
         xmldata (zip/xml-zip data)
         ]
     (xml-test fname file xmldata :num-of-pages "1")
@@ -69,7 +72,7 @@
 (deftest xml-test-02
   (let [fname "resources/test-pdf.pdf"
         file (io/file fname)
-        data (core/xmlValidationOutput file)
+        data (core/validate file)
         xmldata (zip/xml-zip data)
         ]
     (xml-test fname file xmldata :num-of-pages "1")
@@ -92,7 +95,7 @@
 (deftest xml-test-03
   (let [fname "resources/test-pdf-from-ocr.pdf"
         file (io/file fname)
-        data (core/xmlValidationOutput file)
+        data (core/validate file)
         xmldata (zip/xml-zip data)
         ]
     (xml-test fname file xmldata :num-of-pages "1")
@@ -116,7 +119,7 @@
 ;; (deftest xml-test-04
 ;;   (let [fname "resources/xmpspecification.pdf"
 ;;         file (io/file fname)
-;;         data (core/xmlValidationOutput file)
+;;         data (core/validate file)
 ;;         xmldata (zip/xml-zip data)
 ;;         ]
 ;;     (xml-test fname file xmldata :num-of-pages "94")
@@ -139,7 +142,7 @@
 (deftest xml-test-05
   (let [fname "resources/xmp_metadata_added.pdf"
         file (io/file fname)
-        data (core/xmlValidationOutput file)
+        data (core/validate file)
         xmldata (zip/xml-zip data)
         ]
     (xml-test fname file xmldata :num-of-pages "1")
@@ -157,6 +160,41 @@
       (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
       )
     ;(println (x/indent-str xmldata))
+    )
+  )
+
+(deftest xml-test-05
+  (let [fname "resources/corrupted.pdf"
+        file (io/file fname)
+        data (core/validate file)
+        xmldata (zip/xml-zip data)
+        ]
+
+    (is (= (first (xml/xml-> xmldata :extractor :version xml/text)) (Version/getVersion)))
+    (is (= (first (xml/xml-> xmldata :extractor :name xml/text)) "PDFBox Apache.org"))
+    (is (= (first (xml/xml-> xmldata :identification :fileSize xml/text)) (-> file .length .toString)))
+    (is (= (first (xml/xml-> xmldata :identification :filePath xml/text))  (.getAbsolutePath file)))
+    (is (= (first (xml/xml-> xmldata :identification :lastModified xml/text))
+           (format "%s" (new Date (.lastModified file)))))
+    (is (= (first (xml/xml-> xmldata :characterization :isEncrypted xml/text)) ""))
+    (is (= (first (xml/xml-> xmldata :characterization :numOfPages xml/text)) ""))
+
+    (testing (format "test of validation section pdfa: %s" fname)
+      (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "false"))
+      (is (= (first (xml/xml-> xmldata :validation :isValidPDFA xml/text)) "false"))
+      )
+    (testing (format "testing xml, section characterization %s" fname)
+      (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) ""))
+      (is (= (first (xml/xml-> xmldata :characterization :title  xml/text)) ""))
+      (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) ""))
+      (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) ""))
+      (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) ""))
+      (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) ""))
+      )
+    (testing (format "testing xml, section identification %s" fname)
+      (is (= (first (xml/xml-> xmldata :identification :created xml/text)) ""))
+      (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
+      )
     )
   )
 

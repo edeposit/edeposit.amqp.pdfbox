@@ -15,25 +15,9 @@
            [org.apache.pdfbox Version]
            [java.text SimpleDateFormat]
            )
-  (:gen-class :main true)
   )
 
-;; (def formatter (format/formatters :date-time :basic-time))
-;; (format/show-formatters)
-;; (def created (.getCreationDate info))
-
-;; (format/parse formatter created)
-;; (format/show-formatters)
-
-;; (def dict (.getDictionary info))
-;; (.keyList dict)
-;; (.getValues dict)
-;; (.entrySet dict)
-;; (def cat (.getDocumentCatalog pddocument))
-;; (def meta (.getMetadata cat))
-
 (defn format-date [value]
-  (def formatter (format/formatters :basic-date-time))
   (if (or (nil? value) (empty value))
     ""
     (if (integer? value)
@@ -46,98 +30,105 @@
     )
   )
 
-
-
-;; (def test-file (io/file "resources/xmpspecification.pdf"))
-;; (def pddocument (PDDocument/load test-file))
-;; (def info (.getDocumentInformation pddocument))
-;; (def catalog (.getDocumentCatalog pddocument))
-;; (def metadata (.getMetadata catalog))
-
-;; (def xmp (or (nil? metadata) (.exportXMPMetadata metadata)))
-;; (utils/list-methods xmp)
-;; (.getEncoding xmp)
-;; (print  (.asByteArray xmp))
-
-;; (with-open [o (io/output-stream "test.txt")]
-;;   (.save xmp o))
-
-(defn xmlValidationOutput [test-file]
-  (let* [pddocument (PDDocument/load test-file)
-         parser (new PreflightParser test-file) ]
-        (do
-          (.parse parser)
-          (def preflightDocument (.getPreflightDocument parser))
-          (.validate preflightDocument)
-          (def result (.getResult preflightDocument))
-          (.close preflightDocument)
-          (def info (.getDocumentInformation pddocument))
-          (def catalog (.getDocumentCatalog pddocument))
-          (def metadata (.getMetadata catalog))
-          (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
-
-          (def xmp-file (doto (java.io.File/createTempFile "pre" ".suff") .deleteOnExit))
-          ;; (if-not (nil? metadata)
-          ;;   (.save (.exportXMPMetadata metadata) xmp-file)            
-          ;;   )
-
-          (xml/element :result {}
-                       (xml/element :extractor {}
-                                    (xml/element :name {} "PDFBox Apache.org")
-                                    (xml/element :version {} (Version/getVersion))
-                                    )
-                       (xml/element :identification {}
-                                    (xml/element :fileSize {} (format "%s" (.length test-file)))
-                                    (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
-                                    (xml/element :lastModified {} (format-date (.lastModified test-file)))
-                                    (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))))
-                                    (xml/element :trapped {} (.getTrapped info))
-                                    )
-                       (xml/element :characterization {}
-                                    (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
-                                    (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
-                                    (xml/element :author {} (.getAuthor info))
-                                    (xml/element :title {} (.getTitle info))
-                                    (xml/element :subject {} (.getSubject info))
-                                    (xml/element :keywords {} (.getKeywords info))
-                                    (xml/element :creator {} (.getCreator info))
-                                    (xml/element :producer {} (.getProducer info))
-                                    )
-                       (xml/element :validation {}
-                                    (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
-                                    (xml/element :validationErrors {}
-                                                 (map #(xml/element :error { :errorCode (format "%s" (.getErrorCode %))}
-                                                                    (format "%s" (.getDetails %)))
-                                                      (.getErrorsList result)))
-                                    )
-                       (xml/element :xmp {} "ahoj"
-                                    ;(clojure.xml/parse (io/file "/tmp/xmp.xml"))
-                                    )
+(defn validate [test-file]
+  (try
+    (def pddocument (PDDocument/load test-file))
+    (def parser (new PreflightParser test-file)  )
+    
+    (.parse parser)
+    (def preflightDocument (.getPreflightDocument parser))
+    (.validate preflightDocument)
+    (def result (.getResult preflightDocument))
+    (.close preflightDocument)
+    (def info (.getDocumentInformation pddocument))
+    (def catalog (.getDocumentCatalog pddocument))
+    (def metadata (.getMetadata catalog))
+    (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
+    
+    (xml/element :result {}
+                 (xml/element :extractor {}
+                              (xml/element :name {} "PDFBox Apache.org")
+                              (xml/element :version {} (Version/getVersion))
+                              )
+                 (xml/element :identification {}
+                              (xml/element :fileSize {} (format "%s" (.length test-file)))
+                              (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
+                              (xml/element :lastModified {} (format-date (.lastModified test-file)))
+                              (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))))
+                              (xml/element :trapped {} (.getTrapped info))
+                              )
+                 (xml/element :characterization {}
+                              (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
+                              (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
+                              (xml/element :author {} (.getAuthor info))
+                              (xml/element :title {} (.getTitle info))
+                              (xml/element :subject {} (.getSubject info))
+                              (xml/element :keywords {} (.getKeywords info))
+                              (xml/element :creator {} (.getCreator info))
+                              (xml/element :producer {} (.getProducer info))
+                              )
+                 (xml/element :validation {}
+                              (xml/element :isValidPDF {} (format "%s" true))
+                              (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
+                              (xml/element :validationErrors {}
+                                           (map #(xml/element :error { :errorCode (format "%s" (.getErrorCode %))}
+                                                              (format "%s" (.getDetails %)))
+                                                (.getErrorsList result)))
+                              )
+                 
+                 (if-not (nil? metadata)
+                   (let [xmp-file (doto (java.io.File/createTempFile "pdfbox-xmp-" ".xml") .deleteOnExit) ]
+                     (with-open [o (io/output-stream xmp-file)]
+                       (.save (.exportXMPMetadata metadata) o)
                        )
-          )
-        )
+                     (xml/cdata (slurp xmp-file))
+                     )
+                   )
+                 )
+    (catch Exception e 
+      (xml/element :result {}
+                 (xml/element :extractor {}
+                              (xml/element :name {} "PDFBox Apache.org")
+                              (xml/element :version {} (Version/getVersion))
+                              )
+                 (xml/element :identification {}
+                              (xml/element :fileSize {} (format "%s" (.length test-file)))
+                              (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
+                              (xml/element :lastModified {} (format-date (.lastModified test-file)))
+                              (xml/element :created {} "")
+                              (xml/element :trapped {} "")
+                              )
+                 (xml/element :characterization {}
+                              (xml/element :isEncrypted {} "")
+                              (xml/element :numOfPages {} "")
+                              (xml/element :author {} "")
+                              (xml/element :title {} "")
+                              (xml/element :subject {} "")
+                              (xml/element :keywords {} "")
+                              (xml/element :creator {} "")
+                              (xml/element :producer {} "")
+                              )
+                 (xml/element :validation {}
+                              (xml/element :isValidPDF {} (format "%s" false))
+                              (xml/element :isValidPDFA {} (format "%s" false))
+                              (xml/element :validationErrors {}
+                                           (xml/element :error {:errorCode "parser error"}
+                                                        (str (.getMessage e))
+                                                        )
+                                           )
+                              )
+                 
+                 )
+      )
+    )
   )
 
 (defn xml-with-elapsed-time [test-file]
   (let* [ start (. java.lang.System (nanoTime))
-         xmldata (xmlValidationOutput test-file)
+         xmldata (validate test-file)
          stop (. java.lang.System (nanoTime))
          ]
         xmldata
         )
   )
 
-(defn -main [& args]
-  (let [ [options args banner] (cli/cli args
-                                        [ "-f" "--file" :default "resources/1002186430_000015 Born digital - OCR z TIFFu.pdf"]
-                                        [ "--amqp" :default false :flag true]
-                                        [ "-h" "--help" :default false :flag true]
-                                        )
-         ]
-    (when (:help options)
-      (println banner)
-      (System/exit 0)
-      )
-    (println (xml/indent-str (xmlValidationOutput (io/file (:file options)))))
-    )
-  )
