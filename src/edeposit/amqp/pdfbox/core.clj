@@ -14,6 +14,8 @@
            [java.util Date]
            [org.apache.pdfbox Version]
            [java.text SimpleDateFormat]
+           [java.text Normalizer]
+           [java.text.Normalizer$Form]
            )
   )
 
@@ -30,6 +32,14 @@
     )
   )
 
+(defn normalize-string [string]
+  (-> string
+      (Normalizer/normalize java.text.Normalizer$Form/NFD)
+      (.replaceAll "\\P{InBasic_Latin}" ".")
+      (.replaceAll "\\p{C}" ".")
+      )
+  )
+
 (defn validate [test-file]
   (try
     (def pddocument (PDDocument/load test-file))
@@ -44,47 +54,52 @@
     (def catalog (.getDocumentCatalog pddocument))
     (def metadata (.getMetadata catalog))
     (def fmt (new SimpleDateFormat "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
-    
-    (xml/element :result {}
-                 (xml/element :extractor {}
-                              (xml/element :name {} "PDFBox Apache.org")
-                              (xml/element :version {} (Version/getVersion))
-                              )
-                 (xml/element :identification {}
-                              (xml/element :fileSize {} (format "%s" (.length test-file)))
-                              (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
-                              (xml/element :lastModified {} (format-date (.lastModified test-file)))
-                              (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))))
-                              (xml/element :trapped {} (.getTrapped info))
-                              )
-                 (xml/element :characterization {}
-                              (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
-                              (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
-                              (xml/element :author {} (.getAuthor info))
-                              (xml/element :title {} (.getTitle info))
-                              (xml/element :subject {} (.getSubject info))
-                              (xml/element :keywords {} (.getKeywords info))
-                              (xml/element :creator {} (.getCreator info))
-                              (xml/element :producer {} (.getProducer info))
-                              )
-                 (xml/element :validation {}
-                              (xml/element :isValidPDF {} (format "%s" true))
-                              (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
-                              (xml/element :validationErrors {}
-                                           (map #(xml/element :error { :errorCode (format "%s" (.getErrorCode %))}
-                                                              (format "%s" (.getDetails %)))
-                                                (.getErrorsList result)))
-                              )
-                 
-                 (if-not (nil? metadata)
-                   (let [xmp-file (doto (java.io.File/createTempFile "pdfbox-xmp-" ".xml") .deleteOnExit) ]
-                     (with-open [o (io/output-stream xmp-file)]
-                       (.save (.exportXMPMetadata metadata) o)
+
+    (def xmlroot 
+      (xml/element :result {}
+                   (xml/element :extractor {}
+                                (xml/element :name {} "PDFBox Apache.org")
+                                (xml/element :version {} (Version/getVersion))
+                                )
+                   (xml/element :identification {}
+                                (xml/element :fileSize {} (format "%s" (.length test-file)))
+                                (xml/element :filePath {} (format "%s" (.getAbsolutePath test-file)))
+                                (xml/element :lastModified {} (format-date (.lastModified test-file)))
+                                (xml/element :created {} (.format fmt (.getTime (.getCreationDate info))) )
+                                (xml/element :trapped {} (.getTrapped info))
+                                )
+                   (xml/element :characterization {}
+                                (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
+                                (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)) )
+                                (xml/element :author {} (.getAuthor info) )
+                                (xml/element :title {}  (.getTitle info))
+                                (xml/element :subject {} (.getSubject info))
+                                (xml/element :keywords {} (.getKeywords info))
+                                (xml/element :creator {} (.getCreator info))
+                                (xml/element :producer {} (.getProducer info))
+                                )
+                   (xml/element :validation {}
+                                (xml/element :isValidPDF {} (format "%s" true))
+                                (xml/element :isValidPDFA {} (format "%s" (.isValid result)))
+                                (xml/element :validationErrors {}
+                                             (map #(xml/element :error { :errorCode (normalize-string (format "%s" (.getErrorCode %)))}
+                                                                (normalize-string (format "%s" (.getDetails %))))
+                                                  (.getErrorsList result)))
+                                )
+                   
+                   (if-not (nil? metadata)
+                     (let [xmp-file (doto (java.io.File/createTempFile "pdfbox-xmp-" ".xml") .deleteOnExit) ]
+                       (with-open [o (io/output-stream xmp-file)]
+                         (.save (.exportXMPMetadata metadata) o)
+                         )
+                       (xml/cdata (slurp xmp-file))
                        )
-                     (xml/cdata (slurp xmp-file))
                      )
                    )
-                 )
+      )
+    (.close pddocument)
+    xmlroot
+
     (catch Exception e 
       (xml/element :result {}
                  (xml/element :extractor {}
@@ -112,8 +127,8 @@
                               (xml/element :isValidPDF {} (format "%s" false))
                               (xml/element :isValidPDFA {} (format "%s" false))
                               (xml/element :validationErrors {}
-                                           (xml/element :error {:errorCode "parser error"}
-                                                        (str (.getMessage e))
+                                           (xml/element :error {:errorCode "exception"}
+                                                        (normalize-string (.getMessage e))
                                                         )
                                            )
                               )

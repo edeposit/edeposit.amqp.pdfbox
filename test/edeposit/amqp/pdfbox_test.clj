@@ -4,6 +4,7 @@
             [clojure.zip :as zip]
             [clojure.data.zip.xml :as xml]
             [clojure.data.xml :as x]
+            [edeposit.amqp.pdfbox.handlers :as handlers]
             )
   (:use clojure.test)
   (:import [java.util Date]
@@ -112,7 +113,7 @@
       ;(is (= (first (xml/xml-> xmldata :identification :created xml/text)) "2013-10-23T11:28:08.000+02:00"))
       (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
       )
-    ;(println (x/indent-str xmldata))
+    ;;(println (x/indent-str xmldata))
     )
   )
 
@@ -159,7 +160,8 @@
       ;(is (= (first (xml/xml-> xmldata :identification :created xml/text)) "2013-10-23T11:28:08.000+02:00"))
       (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
       )
-    ;(println (x/indent-str xmldata))
+    ;; (println "ahoj")
+    ;; (println (x/indent-str xmldata))
     )
   )
 
@@ -199,4 +201,64 @@
   )
 
 
+(deftest xml-test-06
+  (let [fname "resources/corrupted.pdf"
+        file (io/file fname)
+        data (core/validate file)
+        xmldata (zip/xml-zip data)
+        ]
+
+    (is (= (first (xml/xml-> xmldata :extractor :version xml/text)) (Version/getVersion)))
+    (is (= (first (xml/xml-> xmldata :extractor :name xml/text)) "PDFBox Apache.org"))
+    (is (= (first (xml/xml-> xmldata :identification :fileSize xml/text)) (-> file .length .toString)))
+    (is (= (first (xml/xml-> xmldata :identification :filePath xml/text))  (.getAbsolutePath file)))
+    (is (= (first (xml/xml-> xmldata :identification :lastModified xml/text))
+           (format "%s" (new Date (.lastModified file)))))
+    (is (= (first (xml/xml-> xmldata :characterization :isEncrypted xml/text)) ""))
+    (is (= (first (xml/xml-> xmldata :characterization :numOfPages xml/text)) ""))
+
+    (testing (format "testing xml unicode letters, section identification %s" fname)
+      (testing (format "testing xml, section validation %s" fname) 
+        (is (= (xml/xml1-> xmldata :validation :isValidPDF xml/text) "false"))
+        (is (= (xml/xml1-> xmldata :validation :isValidPDFA xml/text) "false"))
+        (is (.contains (xml/xml1-> xmldata :validation :validationErrors :error xml/text) "Error"))
+        (is (.contains (xml/xml1-> xmldata :validation :validationErrors :error xml/text) "Expected a long type"))
+        (is (= (xml/xml1-> xmldata :validation :validationErrors :error (xml/attr :errorCode)) "exception"))
+        )
+      ;; (let [out (x/indent-str xmldata)]
+      ;;   (println out)
+      ;;   )
+      )
+    )
+  )
+
+(deftest handlers-test-01
+  (let [fname "resources/test-pdf.pdf" 
+        file (io/file fname)
+        metadata (read-string (slurp "resources/request-metadata.clj"))
+        payload (.getBytes (slurp "resources/request-payload.bin"))
+        result (handlers/parse-and-validate metadata payload)
+        xmldata (zip/xml-zip result)
+        ]
+
+    (testing (format "testing amqp handler")
+      (testing (format "test of validation section pdfa: %s" fname)
+        (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "true"))
+        (is (= (first (xml/xml-> xmldata :validation :isValidPDFA xml/text)) "false"))
+        )
+
+      (testing (format "testing xml, section characterization %s" fname)
+        (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) "Vychodil Bedřich"))
+        (is (= (first (xml/xml-> xmldata :characterization :title xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) "Microsoft® Word 2010"))
+        (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) "Microsoft® Word 2010"))
+      )
+      (testing (format "testing xml, section identification %s" fname)
+        (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
+        )
+      )
+    )
+  )
 
