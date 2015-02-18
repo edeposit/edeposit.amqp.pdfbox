@@ -7,6 +7,7 @@
             [clojure.data.xml :as x]
             [langohr.basic     :as lb]
             [me.raynes.fs :as fs]
+            [clojure.tools.logging :as log]
             )
   (:import [org.apache.commons.codec.binary Base64])
   )
@@ -53,12 +54,13 @@
   )
 
 (defn handle-delivery [ch exchange metadata ^bytes payload]
-  (println "new message arrived")
+  (log/info "new message arrived")
   (defn send-response [msg]
     (lb/publish ch exchange "response" msg 
                 {:UUID (:UUID metadata)
                  :content-type "edeposit/pdfbox-response"
                  :content-encoding "text/xml; charset=\"utf-8\""
+                 :persistent true
                  }
                 )
     )
@@ -67,5 +69,6 @@
       (send-response)
       )
   (lb/ack ch (:delivery-tag metadata))
+  (log/info "message ack")
   )
 

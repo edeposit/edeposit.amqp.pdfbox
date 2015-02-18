@@ -1,4 +1,4 @@
-(defproject edeposit.amqp.pdfbox "0.1.0-SNAPSHOT"
+(defproject edeposit.amqp.pdfbox "0.1.0"
   :description "PDFBOX wrapper for AMQP"
   :url "http://github.com/edeposit/edeposit.amqp.pdfbox"
   :license {:name "Eclipse Public License"
@@ -13,7 +13,6 @@
                  [clj-time "0.8.0"]
                  [org.clojure/data.json "0.2.5"]
                  [environ "1.0.0"]
-                 [byte-streams "0.2.0-alpha8"]
                  [reloaded.repl "0.1.0"]
                  [me.raynes/fs "1.4.6"]
                  [org.clojure/tools.nrepl "0.2.7"]

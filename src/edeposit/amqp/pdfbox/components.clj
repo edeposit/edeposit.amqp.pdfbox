@@ -8,6 +8,7 @@
    [langohr.exchange  :as lx]
    [langohr.channel :as lch]
    [edeposit.amqp.pdfbox.handlers :refer [handle-delivery]]
+   [clojure.tools.logging :as log]
    )
   )
 
@@ -15,13 +16,13 @@
   component/Lifecycle
 
   (start [this]
-    (println "starting PDFBox AMQP client")
+    (log/info "starting PDFBox AMQP client")
     (let [ handler (fn [ch metadata payload] 
                      (handle-delivery ch exchange metadata payload)
                      )
           conn (lcor/connect {:uri uri})
           ch (lch/open conn) ]
-      (println "declaring topic exchange: " exchange)
+      (log/info "declaring topic exchange: " exchange)
       (lx/topic ch exchange {:durable true})
       (lq/declare ch qname {:durable true :auto-delete false})
       (lq/bind ch qname exchange {:routing-key "request"})
@@ -31,7 +32,7 @@
     )
   
   (stop [this]
-    (println "stopping PDFBox AMQP client")
+    (log/info "stopping PDFBox AMQP client")
     (lcor/close channel)
     (lcor/close connection)
     this
