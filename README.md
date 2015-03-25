@@ -3,9 +3,25 @@
 
 A Clojure library designed to validate PDF/A and extract informations from PDF
 
+It uses pdfbox to validate.
+
+It offers amqp service and cli.
+
 ## Usage
 
-lein run -- FILE_NAME
+### validate file
+
+lein run -- --file FILE_NAME
+
+### run as amqp service
+
+lein run -- --amqp
+
+## Message structure
+
+You can see message structure to send to AMQP at directory resources.
+
+Or at script send-message.sh
 
 ## License
 
