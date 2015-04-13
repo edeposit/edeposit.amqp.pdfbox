@@ -18,11 +18,13 @@
                  [org.clojure/tools.nrepl "0.2.7"]
                  [org.clojure/tools.logging "0.3.1"]
                  [commons-codec/commons-codec "1.10"]
+                 [org.apache.commons/commons-lang3 "3.4"]
                  ]
   :main edeposit.amqp.pdfbox.main
   :aot [edeposit.amqp.pdfbox.main clojure.tools.logging.impl]
   :profiles {:dev {:plugins [
                              [quickie "0.3.6"]
+                             [spyscope "0.1.5"]
                              [lein-ubersource "0.1.1"]
                              ]}
              :uberjar {:aot :all}

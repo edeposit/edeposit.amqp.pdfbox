@@ -41,6 +41,7 @@
   )
 
 (defn parse-and-validate [metadata ^bytes payload]
+  (log/debug "parse-and-validate")
   (let [msg (json/read-str (String. payload) :key-fn keyword) 
         data-file (fs/temp-file "pdfbox-amqp-" ".pdf")
         ]
@@ -55,6 +56,12 @@
 
 (defn handle-delivery [ch exchange metadata ^bytes payload]
   (log/info "new message arrived")
+  ;; (with-open [w (java.io.FileWriter. "/tmp/aa-metadata.bin")]
+  ;;   (print-dup metadata w)
+  ;;   )
+  ;; (with-open [w (io/output-stream "/tmp/aa-payload.bin")]
+  ;;   (.write w payload)
+  ;;   )
   (defn send-response [msg]
     (lb/publish ch exchange "response" msg 
                 {:UUID (:UUID metadata)

@@ -16,6 +16,7 @@
            [java.text SimpleDateFormat]
            [java.text Normalizer]
            [java.text.Normalizer$Form]
+           [org.apache.commons.lang3 StringEscapeUtils]
            )
   )
 
@@ -70,13 +71,13 @@
                                 )
                    (xml/element :characterization {}
                                 (xml/element :isEncrypted {} (format "%s" (.isEncrypted pddocument)))
-                                (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)) )
-                                (xml/element :author {} (.getAuthor info) )
-                                (xml/element :title {}  (.getTitle info))
-                                (xml/element :subject {} (.getSubject info))
+                                (xml/element :numOfPages {} (format "%s" (.getNumberOfPages pddocument)))
+                                (xml/element :author {} (StringEscapeUtils/escapeXml10 (.getAuthor info)))
+                                (xml/element :title {}  (StringEscapeUtils/escapeXml10 (.getTitle info)))
+                                (xml/element :subject {} (StringEscapeUtils/escapeXml10 (.getSubject info)))
                                 (xml/element :keywords {} (.getKeywords info))
-                                (xml/element :creator {} (.getCreator info))
-                                (xml/element :producer {} (.getProducer info))
+                                (xml/element :creator {} (StringEscapeUtils/escapeXml10 (.getCreator info)))
+                                (xml/element :producer {} (StringEscapeUtils/escapeXml10 (.getProducer info)))
                                 )
                    (xml/element :validation {}
                                 (xml/element :isValidPDF {} (format "%s" true))
