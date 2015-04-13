@@ -4,6 +4,7 @@
 
 (project-task send-message "*cmd*" "./send-message.sh")
 (project-task run-amqp "*shell*" "lein run -- --amqp")
+(project-task run-tests "*tests*" "lein quickie -- --amqp")
 
 (defun restart-app ()
   (interactive)
