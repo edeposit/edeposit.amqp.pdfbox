@@ -54,6 +54,14 @@
     )
   )
 
+(defn response-properties [metadata]
+  {:headers {:UUID (-> metadata :headers :UUID)}
+   :content-type "edeposit/pdfbox-response"
+   :content-encoding "text/xml; charset=\"utf-8\""
+   :persistent true
+   }
+  )
+
 (defn handle-delivery [ch exchange metadata ^bytes payload]
   (log/info "new message arrived")
   ;; (with-open [w (java.io.FileWriter. "/tmp/aa-metadata.bin")]
@@ -63,13 +71,8 @@
   ;;   (.write w payload)
   ;;   )
   (defn send-response [msg]
-    (lb/publish ch exchange "response" msg 
-                {:UUID (:UUID metadata)
-                 :content-type "edeposit/pdfbox-response"
-                 :content-encoding "text/xml; charset=\"utf-8\""
-                 :persistent true
-                 }
-                )
+    (log/debug "sending a response")
+    (lb/publish ch exchange "response" msg (response-properties metadata))
     )
   (-> (parse-and-validate metadata payload)
       (x/indent-str)

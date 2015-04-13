@@ -13,7 +13,6 @@
            )
   )
 
-
 (defn xml-test-is-valid [fname file xmldata]
   (testing (format "test of validation section pdfa: %s" fname)
     (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "true"))
@@ -294,5 +293,21 @@
         )
       )
     (is (= (xml/xml1-> xmldata :validation :validationErrors :error (xml/attr :errorCode)) nil))
+    )
+  )
+
+(deftest response-test-01
+  (let [fname "resources/fix01-file.pdf" 
+        file (io/file fname)
+        metadata (read-string (slurp "resources/fix01-request-metadata.clj"))
+        payload (.getBytes (slurp "resources/fix01-request-payload.bin"))
+        result (handlers/parse-and-validate metadata payload)
+        ]
+    
+    (testing (format "response copies UUID at headers")
+      (let [response-properties (handlers/response-properties metadata)]
+        (is (= (-> response-properties :headers :UUID) (-> metadata :headers :UUID)))
+        )
+      )
     )
   )
