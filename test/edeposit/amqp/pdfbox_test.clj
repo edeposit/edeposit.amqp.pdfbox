@@ -306,7 +306,7 @@
     
     (testing (format "response copies UUID at headers")
       (let [response-properties (handlers/response-properties metadata)]
-        (is (= (-> response-properties :headers :UUID) (-> metadata :headers :UUID)))
+        (is (= (-> response-properties :headers (get "UUID")) (-> metadata :headers (get "UUID"))))
         )
       )
     )

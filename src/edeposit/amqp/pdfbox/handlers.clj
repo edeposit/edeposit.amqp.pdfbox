@@ -55,7 +55,7 @@
   )
 
 (defn response-properties [metadata]
-  {:headers {:UUID (-> metadata :headers :UUID)}
+  {:headers {"UUID" (-> metadata :headers (get "UUID"))}
    :content-type "edeposit/pdfbox-response"
    :content-encoding "text/xml; charset=\"utf-8\""
    :persistent true
@@ -81,4 +81,3 @@
   (lb/ack ch (:delivery-tag metadata))
   (log/info "message ack")
   )
-
