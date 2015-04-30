@@ -311,3 +311,36 @@
       )
     )
   )
+
+(deftest handlers-fix-02
+  (let [fname "resources/fix02-file.pdf"
+        metadata (read-string (slurp "resources/fix02-request-metadata.clj"))
+        payload (.getBytes (slurp "resources/fix02-request-payload.bin"))
+        result (handlers/parse-and-validate metadata payload)
+        xmldata (zip/xml-zip result)
+        ]
+    
+    (testing (format "testing amqp handler")
+      (testing (format "test of validation section pdfa: %s" fname)
+        (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "true"))
+        (is (= (first (xml/xml-> xmldata :validation :isValidPDFA xml/text)) "false"))
+        )
+
+      (testing (format "testing xml, section characterization %s" fname)
+        (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :title xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) ""))
+        (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) "Canon iR-ADV 6055 PDF"))
+        (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) (StringEscapeUtils/escapeXml10 "Adobe PDF Scan Library 1.0e for Canon imageRUNNER ")))
+      )
+      (testing (format "testing xml, section identification %s" fname)
+        (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
+        )
+      (testing (format "testing xml serialization of an result %s" fname)
+        (is (.startsWith (x/indent-str result) "<?xml version=\"1.0\""))
+        )
+      )
+    (is (= (xml/xml1-> xmldata :validation :validationErrors :error (xml/attr :errorCode)) nil))
+    )
+  )

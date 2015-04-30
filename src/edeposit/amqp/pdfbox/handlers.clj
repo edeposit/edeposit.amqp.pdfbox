@@ -8,6 +8,8 @@
             [langohr.basic     :as lb]
             [me.raynes.fs :as fs]
             [clojure.tools.logging :as log]
+            [clj-time.core :as time]
+            [clj-time.coerce :as tc]
             )
   (:import [org.apache.commons.codec.binary Base64])
   )
@@ -64,11 +66,13 @@
 
 (defn handle-delivery [ch exchange metadata ^bytes payload]
   (log/info "new message arrived")
-  ;; (with-open [w (java.io.FileWriter. "/tmp/aa-metadata.bin")]
-  ;;   (print-dup metadata w)
-  ;;   )
-  ;; (with-open [w (io/output-stream "/tmp/aa-payload.bin")]
-  ;;   (.write w payload)
+  ;; (let [now-long (tc/to-long (time/now))]
+  ;;   (with-open [w (java.io.FileWriter. (format "/tmp/%d-request-metadata.clj" now-long))]
+  ;;     (print-dup metadata w)
+  ;;     )
+  ;;   (with-open [w (io/output-stream (format "/tmp/%d-request-payload.bin" now-long))]
+  ;;     (.write w payload)
+  ;;     )
   ;;   )
   (defn send-response [msg]
     (log/debug "sending a response")
