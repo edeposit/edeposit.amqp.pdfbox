@@ -1,4 +1,4 @@
-(defproject edeposit.amqp.pdfbox "0.1.0"
+(defproject edeposit.amqp.pdfbox "0.1.1"
   :description "PDFBOX wrapper for AMQP"
   :url "http://github.com/edeposit/edeposit.amqp.pdfbox"
   :license {:name "Eclipse Public License"
