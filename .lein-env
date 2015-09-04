@@ -1,5 +1,6 @@
 {:pdfbox-amqp-uri "amqp://guest:guest@localhost/pdfbox"
  :pdfbox-amqp-exchange "validate"
  :pdfbox-amqp-qname "validator"
+ :pdfbox-debug false
  :nrepl-port 12345
 }

@@ -36,11 +36,13 @@
   )
 
 (defn normalize-string [string]
-  (-> string
-      (Normalizer/normalize java.text.Normalizer$Form/NFD)
-      (.replaceAll "\\P{InBasic_Latin}" ".")
-      (.replaceAll "\\p{C}" ".")
-      )
+  (if (some? string)
+    (-> string
+        (Normalizer/normalize java.text.Normalizer$Form/NFD)
+        (.replaceAll "\\P{InBasic_Latin}" ".")
+        (.replaceAll "\\p{C}" ".")
+        )
+    "")
   )
 
 (defn validate [test-file]
