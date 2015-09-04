@@ -347,3 +347,38 @@
       )
     )
   )
+
+(deftest handlers-fix-03
+  (let [metadata (read-string (slurp "resources/fix03-request-metadata.clj"))
+        payload (.getBytes (slurp "resources/fix03-request-payload.bin"))
+        ]
+    
+    (testing (format "testing amqp handler - fix03")
+      (let [result (handlers/parse-and-validate metadata payload)
+            xmldata (zip/xml-zip result)]
+
+        ;;(-> xmldata  x/indent-str println)
+
+        (testing "test of validation section pdfa"
+          (is (= (first (xml/xml-> xmldata :validation :isValidPDF xml/text)) "false"))
+          (is (= (first (xml/xml-> xmldata :validation :isValidPDFA xml/text)) "false"))
+          )
+        (testing "testing xml, section characterization"
+          (is (= (first (xml/xml-> xmldata :characterization :author xml/text)) ""))
+          (is (= (first (xml/xml-> xmldata :characterization :title xml/text)) ""))
+          (is (= (first (xml/xml-> xmldata :characterization :subject  xml/text)) ""))
+          (is (= (first (xml/xml-> xmldata :characterization :keywords  xml/text)) ""))
+          (is (= (first (xml/xml-> xmldata :characterization :creator  xml/text)) ""))
+          (is (= (first (xml/xml-> xmldata :characterization :producer  xml/text)) ""))
+          )
+        (testing "testing xml, section identification"
+          (is (= (first (xml/xml-> xmldata :identification :trapped xml/text)) ""))
+          )    
+        (testing "testing xml serialization of an result"
+          (is (.startsWith (x/indent-str result) "<?xml version=\"1.0\""))
+          )    
+        (is (= (xml/xml1-> xmldata :validation :validationErrors :error (xml/attr :errorCode)) "exception"))
+        )
+      )
+    )
+  )

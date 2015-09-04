@@ -9,6 +9,7 @@
                     (env :pdfbox-amqp-uri)
                     (env :pdfbox-amqp-exchange) 
                     (env :pdfbox-amqp-qname)
+                    (env :pdfbox-debug)
                     )
    )
   )
