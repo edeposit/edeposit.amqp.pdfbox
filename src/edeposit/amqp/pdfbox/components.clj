@@ -12,13 +12,13 @@
    )
   )
 
-(defrecord PDFBox-AMQP [uri exchange qname channel consumer connection]
+(defrecord PDFBox-AMQP [uri exchange qname channel consumer connection debug]
   component/Lifecycle
 
   (start [this]
     (log/info "starting PDFBox AMQP client")
     (let [ handler (fn [ch metadata payload] 
-                     (handle-delivery ch exchange metadata payload)
+                     (handle-delivery ch exchange metadata payload :debug debug)
                      )
           conn (lcor/connect {:uri uri})
           ch (lch/open conn) ]
@@ -40,6 +40,6 @@
 
   )
 
-(defn new-pdfbox-amqp [uri exchange qname]
-  (map->PDFBox-AMQP {:uri uri :exchange exchange :qname qname})
+(defn new-pdfbox-amqp [uri exchange qname debug]
+  (map->PDFBox-AMQP {:uri uri :exchange exchange :qname qname :debug debug})
   )

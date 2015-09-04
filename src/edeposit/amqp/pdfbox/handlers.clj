@@ -64,16 +64,20 @@
    }
   )
 
-(defn handle-delivery [ch exchange metadata ^bytes payload]
+(defn handle-delivery [ch exchange metadata ^bytes payload & {:keys [debug] :or {debug false}}]
   (log/info "new message arrived")
-  ;; (let [now-long (tc/to-long (time/now))]
-  ;;   (with-open [w (java.io.FileWriter. (format "/tmp/%d-request-metadata.clj" now-long))]
-  ;;     (print-dup metadata w)
-  ;;     )
-  ;;   (with-open [w (io/output-stream (format "/tmp/%d-request-payload.bin" now-long))]
-  ;;     (.write w payload)
-  ;;     )
-  ;;   )
+  (when debug
+    (let [now-long (tc/to-long (time/now))]
+      (let [fname (format "/tmp/pdfbox-%d-request-metadata.clj" now-long)]
+        (log/info "write metadata to:" fname)
+        (with-open [w (java.io.FileWriter. fname)]
+          (print-dup metadata w)))
+      (let [fname (format "/tmp/pdfbox-%d-request-payload.bin" now-long)]
+        (log/info "write payload to:" fname)
+        (with-open [w (io/output-stream fname)]
+          (.write w payload)))
+      )
+    )
   (defn send-response [msg]
     (log/debug "sending a response")
     (lb/publish ch exchange "response" msg (response-properties metadata))
@@ -85,3 +89,6 @@
   (lb/ack ch (:delivery-tag metadata))
   (log/info "message ack")
   )
+
+
+
